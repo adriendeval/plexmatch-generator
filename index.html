@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PlexMatch Generator</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg:        #0f0f13;
+    --surface:   #17171f;
+    --panel:     #1e1e28;
+    --border:    #2a2a38;
+    --accent:    #7c5cbf;
+    --accent-hi: #9b7de0;
+    --accent-dim:#3d2d70;
+    --text:      #e4e0f0;
+    --muted:     #7a7590;
+    --danger:    #c0524a;
+    --danger-dim:#3d1a18;
+    --mono:      'JetBrains Mono', monospace;
+    --sans:      'Inter', sans-serif;
+    --radius:    10px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 36px 16px 72px;
+  }
+
+  /* ── Header ── */
+  header {
+    width: 100%;
+    max-width: 800px;
+    margin-bottom: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .header-left { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+
+  header h1 {
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+  }
+  header h1 span { color: var(--accent-hi); }
+
+  header p {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 300;
+  }
+
+  /* Language switcher */
+  .lang-switcher {
+    display: flex;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .lang-btn {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    padding: 7px 14px;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .lang-btn.active {
+    background: var(--accent-dim);
+    color: var(--accent-hi);
+  }
+
+  .lang-btn:not(.active):hover {
+    background: var(--panel);
+    color: var(--text);
+  }
+
+  /* ── Layout ── */
+  .main {
+    width: 100%;
+    max-width: 800px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 22px;
+  }
+
+  .card-title {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+
+  /* ── Search section ── */
+  .db-note {
+    font-size: 12.5px;
+    color: var(--muted);
+    line-height: 1.65;
+    margin-bottom: 12px;
+  }
+
+  .db-note code {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--accent-hi);
+    background: var(--panel);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+
+  .search-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .search-row input { flex: 1; min-width: 0; }
+
+  .db-links {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .db-link-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 13px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--muted);
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: border-color 0.15s, color 0.15s;
+    white-space: nowrap;
+  }
+
+  .db-link-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent-hi);
+  }
+
+  /* ── Keys section ── */
+  #keysContainer { display: flex; flex-direction: column; gap: 8px; }
+
+  .key-row {
+    display: grid;
+    grid-template-columns: minmax(160px, 210px) 1fr auto;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .value-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .value-wrap input { flex: 1; min-width: 0; }
+
+  /* ── Form elements ── */
+  select, input[type="text"] {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 13px;
+    padding: 8px 10px;
+    outline: none;
+    width: 100%;
+    transition: border-color 0.15s;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%237a7590'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 28px;
+    cursor: pointer;
+  }
+
+  select:focus, input[type="text"]:focus { border-color: var(--accent); }
+  select option { background: var(--panel); }
+
+  /* ── Icon buttons ── */
+  .btn-icon {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--muted);
+    cursor: pointer;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    flex-shrink: 0;
+  }
+
+  .btn-icon:hover {
+    background: var(--danger-dim);
+    border-color: var(--danger);
+    color: var(--danger);
+  }
+
+  .btn-icon svg { pointer-events: none; }
+
+  .search-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--muted);
+    text-decoration: none;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    flex-shrink: 0;
+    transition: border-color 0.15s, color 0.15s;
+  }
+
+  .search-link:hover { border-color: var(--accent); color: var(--accent-hi); }
+
+  /* Add key button */
+  .add-key-btn {
+    background: transparent;
+    border: 1px dashed var(--accent-dim);
+    border-radius: 6px;
+    color: var(--accent);
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 8px 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    transition: background 0.15s, border-color 0.15s;
+    align-self: flex-start;
+  }
+
+  .add-key-btn:hover { background: var(--accent-dim); border-color: var(--accent); }
+
+  /* Custom key input */
+  .custom-key-input {
+    max-width: 120px;
+    flex-shrink: 0;
+  }
+
+  /* ── Preview ── */
+  .preview-box {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 18px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 2;
+    color: var(--text);
+    min-height: 80px;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+
+  .preview-box .key-part   { color: var(--accent-hi); }
+  .preview-box .colon-part { color: var(--muted); }
+  .preview-box .val-part   { color: #c9c0e8; }
+  .preview-box .comment    { color: var(--muted); font-style: italic; }
+  .preview-box .empty-msg  { color: var(--muted); font-style: italic; }
+
+  /* ── Export ── */
+  .export-row { display: flex; gap: 8px; margin-top: 14px; }
+
+  .btn-split {
+    display: flex;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--accent);
+    flex: 1;
+  }
+
+  .btn-split button {
+    flex: 1;
+    background: var(--accent-dim);
+    border: none;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 10px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    transition: background 0.15s;
+    white-space: nowrap;
+  }
+
+  .btn-split button:hover { background: var(--accent); }
+
+  .btn-split .divider { width: 1px; background: var(--accent); flex-shrink: 0; }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(12px);
+    background: var(--accent);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 9px 22px;
+    border-radius: 20px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s, transform 0.2s;
+    white-space: nowrap;
+    z-index: 100;
+  }
+
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ── Responsive ── */
+  @media (max-width: 560px) {
+    body { padding: 20px 12px 60px; }
+
+    header { margin-bottom: 20px; }
+    header h1 { font-size: 17px; }
+
+    .card { padding: 16px 14px; }
+
+    .key-row {
+      grid-template-columns: 1fr auto;
+      grid-template-rows: auto auto;
+    }
+
+    .key-row select {
+      grid-column: 1;
+      grid-row: 1;
+    }
+
+    .key-row .value-wrap {
+      grid-column: 1;
+      grid-row: 2;
+    }
+
+    .key-row .btn-icon {
+      grid-column: 2;
+      grid-row: 1;
+      align-self: start;
+    }
+
+    .btn-split button { font-size: 12px; padding: 9px 8px; gap: 5px; }
+    .btn-split button span { display: none; }
+
+    .db-links { gap: 6px; }
+    .db-link-btn { font-size: 11.5px; padding: 6px 10px; }
+  }
+
+  @media (max-width: 400px) {
+    .lang-btn { padding: 6px 10px; font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <h1><span>.plexmatch</span> Generator</h1>
+    <p id="header-sub"></p>
+  </div>
+  <div class="lang-switcher">
+    <button class="lang-btn active" data-lang="en" onclick="setLang('en')">EN</button>
+    <button class="lang-btn" data-lang="fr" onclick="setLang('fr')">FR</button>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- Search -->
+  <div class="card">
+    <div class="card-title" id="lbl-search-title"></div>
+    <p class="db-note" id="lbl-search-note"></p>
+    <div class="search-row">
+      <input type="text" id="searchQuery" placeholder="">
+    </div>
+    <div class="db-links">
+      <a class="db-link-btn" id="tmdbLink" href="#" target="_blank" rel="noopener">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span id="lbl-tmdb"></span>
+      </a>
+      <a class="db-link-btn" id="tvdbLink" href="#" target="_blank" rel="noopener">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span id="lbl-tvdb"></span>
+      </a>
+      <a class="db-link-btn" id="imdbLink" href="#" target="_blank" rel="noopener">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span id="lbl-imdb"></span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Directives -->
+  <div class="card">
+    <div class="card-title" id="lbl-directives-title"></div>
+    <div id="keysContainer"></div>
+    <button class="add-key-btn" id="addKeyBtn" onclick="addKey()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span id="lbl-add-key"></span>
+    </button>
+  </div>
+
+  <!-- Preview + export -->
+  <div class="card">
+    <div class="card-title" id="lbl-preview-title"></div>
+    <div class="preview-box" id="preview"></div>
+    <div class="export-row">
+      <div class="btn-split">
+        <button onclick="downloadFile()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span id="lbl-download"></span>
+        </button>
+        <div class="divider"></div>
+        <button onclick="copyContent()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          <span id="lbl-copy"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── i18n ──────────────────────────────────────────────────────────────────
+const I18N = {
+  en: {
+    subtitle:        'Match hint file generator for Plex Media Server',
+    searchTitle:     'Find an ID',
+    searchNote:      'Search for the title on TMDB or TVDB, grab the numeric ID from the URL, then paste it into the corresponding directive below.\nExample: <code>themoviedb.org/tv/<strong>60625</strong></code> → tmdbid = <code>60625</code>',
+    searchPlaceholder: 'Title to search…',
+    tmdb:            'Search on TMDB',
+    tvdb:            'Search on TVDB',
+    imdb:            'Search on IMDb',
+    directivesTitle: 'Directives',
+    addKey:          'Add a directive',
+    previewTitle:    'File preview',
+    download:        'Download .plexmatch',
+    copy:            'Copy content',
+    deleteTitle:     'Remove',
+    emptyPreview:    'No directives filled in yet…',
+    toastDownload:   'File downloaded!',
+    toastCopy:       'Copied to clipboard!',
+    toastEmpty:      'Nothing to export',
+    generatedBy:     '# Generated by PlexMatch Generator',
+    customKeyPlaceholder: 'Key name',
+    keyOptions: [
+      { value: 'title',  label: 'title — Series title',              placeholder: 'e.g. Pokémon' },
+      { value: 'show',   label: 'show — Series title (alias)',        placeholder: 'e.g. Pokémon' },
+      { value: 'year',   label: 'year — Year of release',            placeholder: 'e.g. 1997' },
+      { value: 'season', label: 'season — Season number',            placeholder: 'e.g. 1' },
+      { value: 'tmdbid', label: 'tmdbid — TMDB ID',                  placeholder: 'e.g. 60625',     search: 'tmdb' },
+      { value: 'tvdbid', label: 'tvdbid — TVDB ID',                  placeholder: 'e.g. 76408',     search: 'tvdb' },
+      { value: 'imdbid', label: 'imdbid — IMDb ID (tt…)',            placeholder: 'e.g. tt0169359', search: 'imdb' },
+      { value: 'guid',   label: 'guid — Plex GUID (tmdb://… etc.)',  placeholder: 'e.g. tmdb://60625' },
+      { value: 'ep',     label: 'ep — Episode mapping (N: file)',    placeholder: 'e.g. 01: Pokémon - S01E01.mkv' },
+      { value: 'custom', label: '— Custom key —',                    placeholder: '' },
+    ],
+  },
+  fr: {
+    subtitle:        'Générateur de fichiers de correspondance pour Plex Media Server',
+    searchTitle:     'Rechercher un ID',
+    searchNote:      'Recherchez le titre sur TMDB ou TVDB, récupérez l\'ID numérique dans l\'URL, puis collez-le dans la directive correspondante ci-dessous.\nExemple : <code>themoviedb.org/tv/<strong>60625</strong></code> → tmdbid = <code>60625</code>',
+    searchPlaceholder: 'Titre à rechercher…',
+    tmdb:            'Chercher sur TMDB',
+    tvdb:            'Chercher sur TVDB',
+    imdb:            'Chercher sur IMDb',
+    directivesTitle: 'Directives',
+    addKey:          'Ajouter une directive',
+    previewTitle:    'Aperçu du fichier',
+    download:        'Télécharger .plexmatch',
+    copy:            'Copier le contenu',
+    deleteTitle:     'Supprimer',
+    emptyPreview:    'Aucune directive renseignée…',
+    toastDownload:   'Fichier téléchargé !',
+    toastCopy:       'Copié dans le presse-papier !',
+    toastEmpty:      'Aucun contenu à exporter',
+    generatedBy:     '# Généré par PlexMatch Generator',
+    customKeyPlaceholder: 'Nom de la clé',
+    keyOptions: [
+      { value: 'title',  label: 'title — Titre de la série',          placeholder: 'Ex : Pokémon' },
+      { value: 'show',   label: 'show — Titre de la série (alias)',    placeholder: 'Ex : Pokémon' },
+      { value: 'year',   label: 'year — Année de diffusion',          placeholder: 'Ex : 1997' },
+      { value: 'season', label: 'season — Numéro de saison',          placeholder: 'Ex : 1' },
+      { value: 'tmdbid', label: 'tmdbid — ID TMDB',                   placeholder: 'Ex : 60625',     search: 'tmdb' },
+      { value: 'tvdbid', label: 'tvdbid — ID TVDB',                   placeholder: 'Ex : 76408',     search: 'tvdb' },
+      { value: 'imdbid', label: 'imdbid — ID IMDb (tt…)',             placeholder: 'Ex : tt0169359', search: 'imdb' },
+      { value: 'guid',   label: 'guid — GUID Plex (tmdb://… etc.)',   placeholder: 'Ex : tmdb://60625' },
+      { value: 'ep',     label: 'ep — Mapping épisode (N : fichier)', placeholder: 'Ex : 01: Pokémon - S01E01.mkv' },
+      { value: 'custom', label: '— Clé personnalisée —',              placeholder: '' },
+    ],
+  },
+};
+
+const SEARCH_URLS = {
+  tmdb: q => `https://www.themoviedb.org/search?query=${encodeURIComponent(q)}`,
+  tvdb: q => `https://www.thetvdb.com/search?query=${encodeURIComponent(q)}`,
+  imdb: q => `https://www.imdb.com/find/?q=${encodeURIComponent(q)}`,
+};
+
+let lang = 'en';
+let rows = [];
+let nextId = 0;
+
+function t() { return I18N[lang]; }
+
+// ── Language ───────────────────────────────────────────────────────────────
+function setLang(l) {
+  lang = l;
+  document.documentElement.lang = l;
+  document.querySelectorAll('.lang-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.lang === l);
+  });
+  applyTranslations();
+  renderRows();
+  updatePreview();
+}
+
+function applyTranslations() {
+  const s = t();
+  document.getElementById('header-sub').textContent       = s.subtitle;
+  document.getElementById('lbl-search-title').textContent = s.searchTitle;
+  document.getElementById('lbl-search-note').innerHTML    = s.searchNote.replace(/\n/g, '<br>');
+  document.getElementById('searchQuery').placeholder      = s.searchPlaceholder;
+  document.getElementById('lbl-tmdb').textContent         = s.tmdb;
+  document.getElementById('lbl-tvdb').textContent         = s.tvdb;
+  document.getElementById('lbl-imdb').textContent         = s.imdb;
+  document.getElementById('lbl-directives-title').textContent = s.directivesTitle;
+  document.getElementById('lbl-add-key').textContent      = s.addKey;
+  document.getElementById('lbl-preview-title').textContent = s.previewTitle;
+  document.getElementById('lbl-download').textContent     = s.download;
+  document.getElementById('lbl-copy').textContent         = s.copy;
+}
+
+// ── Rows ───────────────────────────────────────────────────────────────────
+function addKey(keyVal = 'title', value = '') {
+  const id = nextId++;
+  rows.push({ id, key: keyVal, value, custom: '' });
+  renderRows();
+  updatePreview();
+}
+
+function removeKey(id) {
+  rows = rows.filter(r => r.id !== id);
+  renderRows();
+  updatePreview();
+}
+
+function renderRows() {
+  const s = t();
+  const container = document.getElementById('keysContainer');
+  container.innerHTML = '';
+
+  rows.forEach((row, i) => {
+    const div = document.createElement('div');
+    div.className = 'key-row';
+
+    // Select
+    const sel = document.createElement('select');
+    s.keyOptions.forEach(opt => {
+      const o = document.createElement('option');
+      o.value = opt.value;
+      o.textContent = opt.label;
+      if (opt.value === row.key) o.selected = true;
+      sel.appendChild(o);
+    });
+    sel.addEventListener('change', () => {
+      rows[i].key = sel.value;
+      rows[i].custom = '';
+      renderRows();
+      updatePreview();
+    });
+
+    // Value wrap
+    const valueWrap = document.createElement('div');
+    valueWrap.className = 'value-wrap';
+
+    if (row.key === 'custom') {
+      const keyInput = document.createElement('input');
+      keyInput.type = 'text';
+      keyInput.className = 'custom-key-input';
+      keyInput.placeholder = s.customKeyPlaceholder;
+      keyInput.value = row.custom || '';
+      keyInput.addEventListener('input', () => {
+        rows[i].custom = keyInput.value;
+        updatePreview();
+      });
+      valueWrap.appendChild(keyInput);
+    }
+
+    const opt = s.keyOptions.find(o => o.value === row.key) || {};
+    const valInput = document.createElement('input');
+    valInput.type = 'text';
+    valInput.placeholder = opt.placeholder || '';
+    valInput.value = row.value;
+    valInput.addEventListener('input', () => {
+      rows[i].value = valInput.value;
+      updatePreview();
+    });
+    valueWrap.appendChild(valInput);
+
+    if (opt.search) {
+      const q = document.getElementById('searchQuery').value;
+      const a = document.createElement('a');
+      a.className = 'search-link';
+      a.href = SEARCH_URLS[opt.search](q || '');
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.title = opt.search.toUpperCase();
+      a.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`;
+      valueWrap.appendChild(a);
+    }
+
+    // Remove button
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'btn-icon';
+    removeBtn.title = s.deleteTitle;
+    removeBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>`;
+    removeBtn.addEventListener('click', () => removeKey(row.id));
+
+    div.appendChild(sel);
+    div.appendChild(valueWrap);
+    div.appendChild(removeBtn);
+    container.appendChild(div);
+  });
+}
+
+// ── Preview ────────────────────────────────────────────────────────────────
+function getFileContent() {
+  const s = t();
+  const lines = [s.generatedBy];
+  rows.forEach(row => {
+    const keyName = row.key === 'custom' ? (row.custom || '').trim() : row.key;
+    const val = row.value.trim();
+    if (!keyName || !val) return;
+    lines.push(`${keyName}: ${val}`);
+    if (['tmdbid','tvdbid','imdbid'].includes(row.key) && !rows.some(r => r.key === 'guid')) {
+      const prefix = row.key === 'tmdbid' ? 'tmdb' : row.key === 'tvdbid' ? 'tvdb' : 'imdb';
+      lines.push(`guid: ${prefix}://${val}`);
+    }
+  });
+  return lines.join('\n');
+}
+
+function updatePreview() {
+  const s = t();
+  const preview = document.getElementById('preview');
+  const content = getFileContent();
+  const isEmpty = content === s.generatedBy;
+
+  if (isEmpty) {
+    preview.innerHTML = `<span class="empty-msg">${s.emptyPreview}</span>`;
+    return;
+  }
+
+  preview.innerHTML = content.split('\n').map(line => {
+    if (line.startsWith('#')) return `<span class="comment">${esc(line)}</span>`;
+    const idx = line.indexOf(':');
+    if (idx === -1) return esc(line);
+    return `<span class="key-part">${esc(line.slice(0,idx))}</span><span class="colon-part">:</span><span class="val-part">${esc(line.slice(idx+1))}</span>`;
+  }).join('\n');
+}
+
+function esc(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Export ─────────────────────────────────────────────────────────────────
+function downloadFile() {
+  const s = t();
+  const content = getFileContent();
+  if (content === s.generatedBy) { showToast(s.toastEmpty); return; }
+  const blob = new Blob([content], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '.plexmatch';
+  a.click();
+  showToast(s.toastDownload);
+}
+
+function copyContent() {
+  const s = t();
+  const content = getFileContent();
+  if (content === s.generatedBy) { showToast(s.toastEmpty); return; }
+  navigator.clipboard.writeText(content).then(() => showToast(s.toastCopy));
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2400);
+}
+
+// ── Search link updates ────────────────────────────────────────────────────
+document.getElementById('searchQuery').addEventListener('input', function() {
+  const q = this.value;
+  document.getElementById('tmdbLink').href = SEARCH_URLS.tmdb(q);
+  document.getElementById('tvdbLink').href = SEARCH_URLS.tvdb(q);
+  document.getElementById('imdbLink').href = SEARCH_URLS.imdb(q);
+  renderRows();
+});
+
+// ── Init ───────────────────────────────────────────────────────────────────
+applyTranslations();
+addKey('title', '');
+addKey('year', '');
+addKey('tmdbid', '');
+updatePreview();
+</script>
+</body>
+</html>
