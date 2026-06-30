@@ -286,6 +286,75 @@
 
   .add-key-btn:hover { background: var(--accent-dim); border-color: var(--accent); }
 
+  .key-actions-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+
+  .multi-add-btn {
+    background: transparent;
+    border: 1px dashed var(--accent-dim);
+    border-radius: 6px;
+    color: var(--accent);
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 8px 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.15s, border-color 0.15s;
+  }
+
+  .multi-add-btn:hover { background: var(--accent-dim); border-color: var(--accent); }
+
+  .multi-file-hidden { display: none; }
+
+  .reset-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 4px;
+  }
+
+  .reset-btn {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-family: var(--sans);
+    font-size: 11.5px;
+    cursor: pointer;
+    padding: 4px 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: color 0.15s;
+  }
+
+  .reset-btn:hover { color: var(--danger); }
+
+  .autosave-note {
+    font-size: 11px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    opacity: 0.7;
+  }
+
+  .autosave-note svg { flex-shrink: 0; }
+
+  .footer-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
   /* Custom key input */
   .custom-key-input {
     max-width: 120px;
@@ -569,10 +638,27 @@
   <div class="card">
     <div class="card-title" id="lbl-directives-title"></div>
     <div id="keysContainer"></div>
-    <button class="add-key-btn" id="addKeyBtn" onclick="addKey()">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      <span id="lbl-add-key"></span>
-    </button>
+    <div class="key-actions-row">
+      <button class="add-key-btn" id="addKeyBtn" onclick="addKey()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span id="lbl-add-key"></span>
+      </button>
+      <button class="multi-add-btn" id="multiAddBtn" onclick="document.getElementById('multiFileInput').click()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/><line x1="12" y1="11" x2="12" y2="15"/><line x1="10" y1="13" x2="14" y2="13"/></svg>
+        <span id="lbl-multi-add"></span>
+      </button>
+      <input type="file" id="multiFileInput" class="multi-file-hidden" multiple accept=".mkv,.mp4,.avi,.mov,.m4v,.ts,.wmv">
+    </div>
+    <div class="footer-row">
+      <span class="autosave-note">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        <span id="lbl-autosave"></span>
+      </span>
+      <button class="reset-btn" id="resetBtn" onclick="resetAll()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+        <span id="lbl-reset"></span>
+      </button>
+    </div>
   </div>
 
   <!-- Preview + export -->
@@ -624,6 +710,10 @@ const I18N = {
     epSpecialTitle:  'Mark as Special/OVA (SP prefix)',
     epFilePlaceholder: 'Season 1/Episode.mkv',
     epBrowseTitle:   'Pick a file (filename only)',
+    multiAdd:        'Add multiple episodes',
+    autosaveNote:    'Auto-saved in this browser',
+    reset:           'Reset',
+    resetConfirm:    'Clear all directives? This cannot be undone.',
     keyOptions: [
       { value: 'title',  label: 'title — Series title',              placeholder: 'e.g. Pokémon' },
       { value: 'show',   label: 'show — Series title (alias)',        placeholder: 'e.g. Pokémon' },
@@ -660,6 +750,10 @@ const I18N = {
     epSpecialTitle:  'Marquer comme Spécial/OVA (préfixe SP)',
     epFilePlaceholder: 'Saison 1/Épisode.mkv',
     epBrowseTitle:   'Choisir un fichier (nom uniquement)',
+    multiAdd:        'Ajouter plusieurs épisodes',
+    autosaveNote:    'Sauvegardé automatiquement dans ce navigateur',
+    reset:           'Réinitialiser',
+    resetConfirm:    'Effacer toutes les directives ? Action irréversible.',
     keyOptions: [
       { value: 'title',  label: 'title — Titre de la série',          placeholder: 'Ex : Pokémon' },
       { value: 'show',   label: 'show — Titre de la série (alias)',    placeholder: 'Ex : Pokémon' },
@@ -697,6 +791,7 @@ function setLang(l) {
   applyTranslations();
   renderRows();
   updatePreview();
+  saveState();
 }
 
 function applyTranslations() {
@@ -710,6 +805,9 @@ function applyTranslations() {
   document.getElementById('lbl-imdb').textContent         = s.imdb;
   document.getElementById('lbl-directives-title').textContent = s.directivesTitle;
   document.getElementById('lbl-add-key').textContent      = s.addKey;
+  document.getElementById('lbl-multi-add').textContent    = s.multiAdd;
+  document.getElementById('lbl-autosave').textContent     = s.autosaveNote;
+  document.getElementById('lbl-reset').textContent        = s.reset;
   document.getElementById('lbl-preview-title').textContent = s.previewTitle;
   document.getElementById('lbl-download').textContent     = s.download;
   document.getElementById('lbl-copy').textContent         = s.copy;
@@ -721,12 +819,107 @@ function addKey(keyVal = 'title', value = '') {
   rows.push({ id, key: keyVal, value, custom: '' });
   renderRows();
   updatePreview();
+  saveState();
 }
 
 function removeKey(id) {
   rows = rows.filter(r => r.id !== id);
   renderRows();
   updatePreview();
+  saveState();
+}
+
+function getLastEpNumber() {
+  // Find highest numeric ep number among existing ep rows
+  let max = 0;
+  rows.forEach(r => {
+    if (r.key === 'ep' && r.epNum) {
+      const n = parseInt(r.epNum, 10);
+      if (!isNaN(n) && n > max) max = n;
+    }
+  });
+  return max;
+}
+
+function addMultipleEpisodes(files) {
+  // Sort alphabetically by filename
+  const sorted = Array.from(files).sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+  let nextNum = getLastEpNumber();
+
+  sorted.forEach(file => {
+    nextNum += 1;
+    const id = nextId++;
+    const epNum = String(nextNum).padStart(2, '0');
+    rows.push({
+      id,
+      key: 'ep',
+      value: `${epNum}: ${file.name}`,
+      custom: '',
+      epSpecial: false,
+      epNum: String(nextNum),
+      epFile: file.name,
+    });
+  });
+
+  renderRows();
+  updatePreview();
+  saveState();
+}
+
+// ── Persistence (localStorage) ──────────────────────────────────────────────
+const STORAGE_KEY = 'plexmatch-generator-state';
+
+function saveState() {
+  try {
+    const data = {
+      lang,
+      rows: rows.map(r => ({
+        key: r.key,
+        value: r.value,
+        custom: r.custom || '',
+        epSpecial: r.epSpecial || false,
+        epNum: r.epNum || '',
+        epFile: r.epFile || '',
+      })),
+      searchQuery: document.getElementById('searchQuery').value,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch (e) {
+    // Storage unavailable (private mode, quota, etc.) — fail silently
+  }
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const data = JSON.parse(raw);
+    if (data.lang) lang = data.lang;
+    if (Array.isArray(data.rows) && data.rows.length) {
+      rows = data.rows.map(r => ({ id: nextId++, ...r }));
+    }
+    if (data.searchQuery) {
+      document.getElementById('searchQuery').value = data.searchQuery;
+    }
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+function resetAll() {
+  const s = t();
+  if (!confirm(s.resetConfirm)) return;
+  rows = [];
+  nextId = 0;
+  document.getElementById('searchQuery').value = '';
+  try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+  addKey('title', '');
+  addKey('year', '');
+  addKey('tmdbid', '');
+  renderRows();
+  updatePreview();
+  saveState();
 }
 
 function renderRows() {
@@ -752,6 +945,7 @@ function renderRows() {
       rows[i].custom = '';
       renderRows();
       updatePreview();
+      saveState();
     });
 
     // Value wrap
@@ -767,6 +961,7 @@ function renderRows() {
       keyInput.addEventListener('input', () => {
         rows[i].custom = keyInput.value;
         updatePreview();
+        saveState();
       });
       valueWrap.appendChild(keyInput);
     }
@@ -791,6 +986,7 @@ function renderRows() {
         rows[i].epFile    = epFile;
         rows[i].value     = (epNum || epFile) ? `${prefix}${num}: ${epFile}` : '';
         updatePreview();
+        saveState();
       };
 
       // Number group
@@ -879,6 +1075,7 @@ function renderRows() {
       valInput.addEventListener('input', () => {
         rows[i].value = valInput.value;
         updatePreview();
+        saveState();
       });
       valueWrap.appendChild(valInput);
 
@@ -983,13 +1180,32 @@ document.getElementById('searchQuery').addEventListener('input', function() {
   document.getElementById('tvdbLink').href = SEARCH_URLS.tvdb(q);
   document.getElementById('imdbLink').href = SEARCH_URLS.imdb(q);
   renderRows();
+  saveState();
+});
+
+// ── Multi-file add ───────────────────────────────────────────────────────────
+document.getElementById('multiFileInput').addEventListener('change', function() {
+  if (this.files && this.files.length) {
+    addMultipleEpisodes(this.files);
+  }
+  this.value = ''; // reset so the same files can be re-picked later
 });
 
 // ── Init ───────────────────────────────────────────────────────────────────
+const restored = loadState();
+document.documentElement.lang = lang;
+document.querySelectorAll('.lang-btn').forEach(b => {
+  b.classList.toggle('active', b.dataset.lang === lang);
+});
 applyTranslations();
-addKey('title', '');
-addKey('year', '');
-addKey('tmdbid', '');
+
+if (!restored) {
+  addKey('title', '');
+  addKey('year', '');
+  addKey('tmdbid', '');
+} else {
+  renderRows();
+}
 updatePreview();
 </script>
 </body>
